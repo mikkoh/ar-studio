@@ -8,18 +8,19 @@ import DeviceMotion from 'DeviceMotion';
 import getObjects from './get-objects';
 
 const planes = getObjects();
+const camera = Scene.root.find('Camera');
 
 let index = 0;
 
 TouchGestures.onTap().subscribe((event) => {
-  const segment = planes.objects[index];
+  const plane = planes.objects[index];
   const location = Reactive.point2d(
     Reactive.val(event.location.x),
     Reactive.val(event.location.y),
   );
   const projected = Scene.unprojectToFocalPlane(location);
 
-  segment.hidden = Reactive.val(false);
+  plane.hidden = Reactive.val(false);
 
   const worldPosition = Reactive.point(
     DeviceMotion.worldTransform.x.add(projected.x.pin()),
@@ -27,7 +28,13 @@ TouchGestures.onTap().subscribe((event) => {
     DeviceMotion.worldTransform.z.add(projected.z.pin()),
   );
 
-  segment.transform.position = worldPosition;
+  const cameraTransform = camera.transform;
+
+  plane.transform.position = worldPosition;
+
+  plane.transform.rotationX = DeviceMotion.worldTransform.rotationX.pin();
+  plane.transform.rotationY = DeviceMotion.worldTransform.rotationY.pin();
+  plane.transform.rotationZ = DeviceMotion.worldTransform.rotationZ.pin();
 
   index = (index + 1) % planes.objects.length;
 });
