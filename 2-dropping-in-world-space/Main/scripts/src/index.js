@@ -2,38 +2,32 @@
 import Scene from 'Scene';
 import console from 'Diagnostics';
 import Reactive from 'Reactive';
-import Time from 'Time';
 import TouchGestures from 'TouchGestures';
+import DeviceMotion from 'DeviceMotion';
 
-import createRibbon from './create-ribbon';
-import getPositionSignalFromTransform from './get-position-signal-from-transform';
+import getObjects from './get-objects';
 
-const ribbon = createRibbon();
-
-const camera = Scene.root.find('Camera');
-const focalDistance = camera.child('Focal Distance');
-
+const planes = getObjects();
 
 let index = 0;
 
 TouchGestures.onTap().subscribe((event) => {
-  const segment = ribbon.segments[index];
+  const segment = planes.objects[index];
   const location = Reactive.point2d(
     Reactive.val(event.location.x),
     Reactive.val(event.location.y),
   );
-  const projected = Scene.unprojectWithDepth(location, 100);
+  const projected = Scene.unprojectToFocalPlane(location);
 
   segment.hidden = Reactive.val(false);
 
-  segment.transform.position = Reactive.point(
-    projected.x.pin(),
-    projected.y.pin(),
-    projected.z.pin(),
+  const worldPosition = Reactive.point(
+    DeviceMotion.worldTransform.x.add(projected.x.pin()),
+    DeviceMotion.worldTransform.y.add(projected.y.pin()),
+    DeviceMotion.worldTransform.z.add(projected.z.pin()),
   );
 
-  index = (index + 1) % ribbon.segments.length;
+  segment.transform.position = worldPosition;
+
+  index = (index + 1) % planes.objects.length;
 });
-
-
-// Scene.unprojectToFocalPlane()

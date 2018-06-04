@@ -7,16 +7,16 @@ export default function createRibbon({
   segmentCount = 10,
   itemToTrack = null,
 } = {}) {
-  const segments = Array(segmentCount)
+  const objects = Array(segmentCount)
     .fill(null)
     .map((_value, i) => {
       return Scene.root.find(`${segmentBaseName}${i}`);
     });
 
-  hideAllSegments();
+  hideAllobjects();
 
-  function hideAllSegments() {
-    segments.forEach((segment) => {
+  function hideAllobjects() {
+    objects.forEach((segment) => {
       segment.hidden = Reactive.val(true);
     });
   }
@@ -26,7 +26,7 @@ export default function createRibbon({
   }
 
   return {
-    segments,
+    objects,
     moveTo,
   };
 }
