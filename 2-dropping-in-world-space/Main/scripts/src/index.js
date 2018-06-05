@@ -9,6 +9,10 @@ import getObjects from './get-objects';
 
 const planes = getObjects();
 const camera = Scene.root.find('Camera');
+const out = Scene.root.find('outputText');
+const planeTracker = Scene.root.find('planeTracker');
+
+out.text = planeTracker.confidence;
 
 let index = 0;
 
@@ -20,15 +24,13 @@ TouchGestures.onTap().subscribe((event) => {
   );
   const projected = Scene.unprojectToFocalPlane(location);
 
-  plane.hidden = Reactive.val(false);
-
   const worldPosition = Reactive.point(
-    DeviceMotion.worldTransform.x.add(projected.x.pin()),
-    DeviceMotion.worldTransform.y.add(projected.y.pin()),
-    DeviceMotion.worldTransform.z.add(projected.z.pin()),
+    DeviceMotion.worldTransform.x.pin().add(projected.x.pin()),
+    DeviceMotion.worldTransform.y.pin().add(projected.y.pin()),
+    DeviceMotion.worldTransform.z.pin().add(projected.z.pin()),
   );
 
-  const cameraTransform = camera.transform;
+  plane.hidden = Reactive.val(false);
 
   plane.transform.position = worldPosition;
 
