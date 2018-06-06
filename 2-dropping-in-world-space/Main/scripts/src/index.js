@@ -13,9 +13,17 @@ const planes = getObjects('plane');
 const camera = Scene.root.find('Camera');
 const out = Scene.root.find('outputText');
 const planeTracker = Scene.root.find('planeTracker');
-const materialNotDropped = Materials.get('HeyMaterialPreDrop');
-const materialDropped = Materials.get('HeyMaterial');
 
+const materialsNotDropped = [
+  Materials.get('GreenMaterialNotDropped'),
+  Materials.get('BlueMaterialNotDropped'),
+  Materials.get('RedMaterialNotDropped'),
+];
+const materialsDropped = [
+  Materials.get('GreenMaterial'),
+  Materials.get('BlueMaterial'),
+  Materials.get('RedMaterial'),
+];
 
 const center = Reactive.point2d(
   CameraInfo.previewSize.width.mul(0.5),
@@ -37,14 +45,17 @@ TouchGestures.onTap().subscribe((event) => {
 });
 
 function changeCurrentPlane() {
+  const currentMaterialIdx = index;
+  const previousMaterialIdx = index - 1 >= 0 ? index - 1 : planes.length - 1;
+
   if (currentPlane) {
     makePlaneStick(currentPlane);
-    currentPlane.material = materialDropped;
+    currentPlane.material = materialsDropped[previousMaterialIdx % materialsDropped.length];
   }
 
   currentPlane = planes[index];
 
-  currentPlane.material = materialNotDropped;
+  currentPlane.material = materialsNotDropped[currentMaterialIdx % materialsNotDropped.length];
   currentPlane.hidden = Reactive.val(false);
 
   makePlaneFollow(currentPlane);
