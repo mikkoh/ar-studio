@@ -5,6 +5,7 @@ import Reactive from 'Reactive';
 import TouchGestures from 'TouchGestures';
 import DeviceMotion from 'DeviceMotion';
 import CameraInfo from 'CameraInfo';
+import Materials from 'Materials';
 
 import getObjects from './get-objects';
 
@@ -12,6 +13,9 @@ const planes = getObjects();
 const camera = Scene.root.find('Camera');
 const out = Scene.root.find('outputText');
 const planeTracker = Scene.root.find('planeTracker');
+const materialNotDropped = Materials.get('HeyMaterialPreDrop');
+const materialDropped = Materials.get('HeyMaterial');
+
 
 const center = Reactive.point2d(
   CameraInfo.previewSize.width.mul(0.5),
@@ -34,12 +38,14 @@ TouchGestures.onTap().subscribe((event) => {
 function changeCurrentPlane() {
   if (currentPlane) {
     makePlaneStick(currentPlane);
+    currentPlane.material = materialDropped;
   }
 
   console.log(`Active Plane: plane${index}`);
 
   currentPlane = planes.objects[index];
 
+  currentPlane.material = materialNotDropped;
   currentPlane.hidden = Reactive.val(false);
 
   makePlaneFollow(currentPlane);
