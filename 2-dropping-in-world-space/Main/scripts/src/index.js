@@ -9,7 +9,7 @@ import Materials from 'Materials';
 
 import getObjects from './get-objects';
 
-const planes = getObjects();
+const planes = getObjects('plane');
 const camera = Scene.root.find('Camera');
 const out = Scene.root.find('outputText');
 const planeTracker = Scene.root.find('planeTracker');
@@ -29,6 +29,7 @@ let currentPlane;
 
 out.text = Reactive.val("Confidence: ").concat(planeTracker.confidence);
 
+hideAllPlanes();
 changeCurrentPlane();
 
 TouchGestures.onTap().subscribe((event) => {
@@ -41,20 +42,20 @@ function changeCurrentPlane() {
     currentPlane.material = materialDropped;
   }
 
-  console.log(`Active Plane: plane${index}`);
-
-  currentPlane = planes.objects[index];
+  currentPlane = planes[index];
 
   currentPlane.material = materialNotDropped;
   currentPlane.hidden = Reactive.val(false);
 
   makePlaneFollow(currentPlane);
 
-  index = (index + 1) % planes.objects.length;
+  index = (index + 1) % planes.length;
 }
 
-function radToDeg(rad) {
-  return rad.mul(Reactive.val(180).div(Reactive.val(Math.PI)));
+function hideAllPlanes() {
+  planes.forEach((plane) => {
+    plane.hidden = Reactive.val(true);
+  });
 }
 
 function makePlaneFollow(plane) {

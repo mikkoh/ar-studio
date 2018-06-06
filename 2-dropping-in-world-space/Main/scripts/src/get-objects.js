@@ -1,32 +1,22 @@
 import Scene from 'Scene';
-import Reactive from 'Reactive';
 import console from 'Diagnostics';
 
-export default function createRibbon({
-  segmentBaseName = 'plane',
-  segmentCount = 10,
-  itemToTrack = null,
-} = {}) {
-  const objects = Array(segmentCount)
-    .fill(null)
-    .map((_value, i) => {
-      return Scene.root.find(`${segmentBaseName}${i}`);
-    });
+export default function getObjects(itemName = 'plane') {
+  const objects = [];
 
-  hideAllobjects();
+  let i = 0;
 
-  function hideAllobjects() {
-    objects.forEach((segment) => {
-      segment.hidden = Reactive.val(true);
-    });
+  try {
+    while(true) {
+      const item = Scene.root.find(`${itemName}${i}`);
+
+      objects.push(item);
+
+      i++;
+    }
+  } catch(e) {
+    console.log(`Found ${i} ${itemName}`);
   }
 
-  function moveTo(location) {
-
-  }
-
-  return {
-    objects,
-    moveTo,
-  };
+  return objects;
 }
