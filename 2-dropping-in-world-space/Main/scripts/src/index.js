@@ -4,6 +4,7 @@ import console from 'Diagnostics';
 import Reactive from 'Reactive';
 import TouchGestures from 'TouchGestures';
 import DeviceMotion from 'DeviceMotion';
+import CameraInfo from 'CameraInfo';
 
 import getObjects from './get-objects';
 
@@ -12,31 +13,60 @@ const camera = Scene.root.find('Camera');
 const out = Scene.root.find('outputText');
 const planeTracker = Scene.root.find('planeTracker');
 
-out.text = planeTracker.confidence;
+const center = Reactive.point2d(
+  CameraInfo.previewSize.width.mul(0.5),
+  CameraInfo.previewSize.height.mul(0.5),
+);
+
+const centerProjected = Scene.unprojectToFocalPlane(center);
 
 let index = 0;
+let currentPlane;
+
+out.text = Reactive.val("Confidence: ").concat(planeTracker.confidence);
+
+changeCurrentPlane();
 
 TouchGestures.onTap().subscribe((event) => {
-  const plane = planes.objects[index];
-  const location = Reactive.point2d(
-    Reactive.val(event.location.x),
-    Reactive.val(event.location.y),
-  );
-  const projected = Scene.unprojectToFocalPlane(location);
+  changeCurrentPlane();
+});
 
-  const worldPosition = Reactive.point(
-    DeviceMotion.worldTransform.x.pin().add(projected.x.pin()),
-    DeviceMotion.worldTransform.y.pin().add(projected.y.pin()),
-    DeviceMotion.worldTransform.z.pin().add(projected.z.pin()),
-  );
+function changeCurrentPlane() {
+  if (currentPlane) {
+    makePlaneStick(currentPlane);
+  }
 
-  plane.hidden = Reactive.val(false);
+  console.log(`Active Plane: plane${index}`);
 
-  plane.transform.position = worldPosition;
+  currentPlane = planes.objects[index];
 
-  plane.transform.rotationX = DeviceMotion.worldTransform.rotationX.pin();
-  plane.transform.rotationY = DeviceMotion.worldTransform.rotationY.pin();
-  plane.transform.rotationZ = DeviceMotion.worldTransform.rotationZ.pin();
+  currentPlane.hidden = Reactive.val(false);
+
+  makePlaneFollow(currentPlane);
 
   index = (index + 1) % planes.objects.length;
-});
+}
+
+function radToDeg(rad) {
+  return rad.mul(Reactive.val(180).div(Reactive.val(Math.PI)));
+}
+
+function makePlaneFollow(plane) {
+  const planePosition = Reactive.point(
+    DeviceMotion.worldTransform.x.add(centerProjected.x),
+    DeviceMotion.worldTransform.y.add(centerProjected.y),
+    DeviceMotion.worldTransform.z.add(centerProjected.z),
+  );
+
+  plane.transform.position = planePosition;
+}
+
+function makePlaneStick(plane) {
+  const worldPosition = Reactive.point(
+    DeviceMotion.worldTransform.x.pin().add(centerProjected.x.pin()),
+    DeviceMotion.worldTransform.y.pin().add(centerProjected.y.pin()),
+    DeviceMotion.worldTransform.z.pin().add(centerProjected.z.pin()),
+  );
+
+  plane.transform.position = worldPosition;
+}
