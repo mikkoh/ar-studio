@@ -1,4 +1,4 @@
-const Scene = require('Scene');
-const console = require('Diagnostics');
+import Scene from 'Scene';
+import console from 'Diagnostics';
 
 console.log('Hello world');
