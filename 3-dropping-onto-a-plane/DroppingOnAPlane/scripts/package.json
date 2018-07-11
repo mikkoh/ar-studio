@@ -1,0 +1,17 @@
+{
+  "name": "ar-studio-project",
+  "version": "1.0.0",
+  "description": "This is an ar studio project",
+  "main": "index.js",
+  "author": "Mikko Haapoja",
+  "license": "MIT",
+  "dependencies": {},
+  "scripts": {
+    "start": "rollup -w --config --environment BUILD:development",
+    "build": "rollup --config --environment BUILD:production"
+  },
+  "devDependencies": {
+    "rollup": "~0.59.4",
+    "rollup-plugin-babel-minify": "~5.0.0"
+  }
+}
