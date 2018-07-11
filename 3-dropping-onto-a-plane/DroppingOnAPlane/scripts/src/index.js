@@ -16,14 +16,17 @@ const centerOfScreen = Reactive.point2d(
   CameraInfo.previewSize.width.div(2),
   CameraInfo.previewSize.height.div(2),
 );
-const deviceNormal = getDirectionNormalFromDeviceMotion();
+
 const planeTrackerIsConfident = getPlaneTrackerIsConfident(planeTracker);
 const maxDistanceForPlane = Units.m(1);
 
 let reusablePoint;
 
 textConfidence.hidden = Reactive.val(true);
-objectOnWorld.hidden = objectOnPlane.hidden = Reactive.val(false);
+objectOnWorld.hidden = objectOnPlane.hidden = Reactive.val(true);
+
+// we always want the object in world space to be `maxDistanceForPlane` away from the camera
+objectOnWorld.transform.position = getPointAlwaysAwayFromCamera();
 
 tapToInit((point) => {
   textTap.hidden = Reactive.val(true);
@@ -36,6 +39,23 @@ tapToInit((point) => {
 
   monitorDeviceMotion().subscribe(updateScene);
 });
+
+function tapToInit(callback) {
+  TouchGestures.onTap().take(1).subscribe((event) => {
+    callback(event.location);
+  });
+}
+
+function getPointAlwaysAwayFromCamera() {
+  const deviceNormal = getDirectionNormalFromDeviceMotion();
+  const pointInSpaceOneMeterOut = deviceNormal.mul(maxDistanceForPlane);
+
+  return Reactive.point(
+    DeviceMotion.worldTransform.x.add(pointInSpaceOneMeterOut.x),
+    DeviceMotion.worldTransform.y.add(pointInSpaceOneMeterOut.y),
+    DeviceMotion.worldTransform.z.add(pointInSpaceOneMeterOut.z),
+  );
+}
 
 function getDirectionNormalFromDeviceMotion() {
   const worldTransform = DeviceMotion.worldTransform;
@@ -56,20 +76,10 @@ function updateScene(data) {
 
   const planePoint = planeTracker.hitTest(reusablePoint);
 
-  const pointInSpaceOneMeterOut = deviceNormal.mul(maxDistanceForPlane);
-
-  const worldSpacePointSignal = Reactive.point(
-    DeviceMotion.worldTransform.x.add(pointInSpaceOneMeterOut.x),
-    DeviceMotion.worldTransform.y.add(pointInSpaceOneMeterOut.y),
-    DeviceMotion.worldTransform.z.add(pointInSpaceOneMeterOut.z),
-  );
-
-  objectOnWorld.transform.position = worldSpacePointSignal;
-
   // the hitTest/raycast didn't hit the plane
   if (planePoint === null) {
-    // objectOnPlane.hidden = Reactive.val(true);
-    // objectOnWorld.hidden = planeTrackerIsConfident.not();
+    objectOnPlane.hidden = Reactive.val(true);
+    objectOnWorld.hidden = planeTrackerIsConfident.not();
 
     return;
   }
@@ -81,19 +91,16 @@ function updateScene(data) {
   );
 
   const isGreaterThanOneMeter = planePointSignal
+    .sub(planeTracker.transform.position)
     .distance(DeviceMotion.worldTransform.position)
-    .gt(maxDistanceForPlane)
+    .gt(maxDistanceForPlane);
 
-  // objectOnPlane.hidden = planeTrackerIsConfident.not().or(isGreaterThanOneMeter);
-  // objectOnWorld.hidden = planeTrackerIsConfident.not().or(isGreaterThanOneMeter.not());
+  // if `planeTrackerIsConfident` is not confident don't show either plane
+  // otherwise we swap which plane is showing based on how far away the point on the plane is
+  objectOnPlane.hidden = planeTrackerIsConfident.not().or(isGreaterThanOneMeter);
+  objectOnWorld.hidden = planeTrackerIsConfident.not().or(isGreaterThanOneMeter.not());
 
   objectOnPlane.transform.position = planePointSignal;
-}
-
-function tapToInit(callback) {
-  TouchGestures.onTap().take(1).subscribe((event) => {
-    callback(event.location);
-  });
 }
 
 function monitorDeviceMotion() {
